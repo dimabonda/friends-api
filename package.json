@@ -1,0 +1,47 @@
+{
+  "name": "strapi-api",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A Strapi application",
+  "scripts": {
+    "develop": "strapi develop",
+    "migrate:up": "NODE_ENV=development ts-node --files ./node_modules/.bin/knex migrate:latest --knexfile ./knexfile.ts",
+    "migrate:down": "NODE_ENV=development npx knex migrate:rollback --knexfile ./knexfile.js",
+    "start": "strapi start",
+    "build": "strapi build",
+    "strapi": "strapi",
+    "deploy": "strapi deploy"
+  },
+  "dependencies": {
+    "@strapi/plugin-cloud": "4.25.11",
+    "@strapi/plugin-i18n": "4.25.11",
+    "@strapi/plugin-users-permissions": "4.25.11",
+    "@strapi/strapi": "4.25.11",
+    "@strapi/types": "^5.0.1",
+    "@types/koa": "^2.15.0",
+    "@types/koa-bodyparser": "^4.3.12",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "8.6.0",
+    "dotenv": "^16.4.5",
+    "knex": "^3.1.0",
+    "lodash": "^4.17.21",
+    "mysql": "^2.18.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "5.3.4",
+    "sqlite3": "^5.1.7",
+    "styled-components": "5.3.3",
+    "ts-node": "^10.9.2"
+  },
+  "author": {
+    "name": "A Strapi developer"
+  },
+  "strapi": {
+    "uuid": "67823567-f16f-4e82-9be9-42682c9ceefd"
+  },
+  "engines": {
+    "node": ">=18.0.0 <=20.x.x",
+    "npm": ">=6.0.0"
+  },
+  "license": "MIT"
+}
