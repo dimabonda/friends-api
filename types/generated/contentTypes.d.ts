@@ -385,6 +385,11 @@ export interface ApiCommentComment extends Schema.CollectionType {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
+    likes: Attribute.Relation<
+      'api::comment.comment',
+      'oneToMany',
+      'plugin::users-permissions.user'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

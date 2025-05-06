@@ -21,9 +21,31 @@ const router = (innerRouter: any, extraRoutes = []) => {
 
 const Routes = [
     {
+        method: 'GET',
+        path: '/comments/:postId/list',
+        handler: 'api::comment.comment.getComments',
+        config: {
+            auth: {
+                enabled: true
+            },
+            policies: [],
+        }
+    },
+    {
         method: 'POST',
         path: '/comments/create',
         handler: 'api::comment.comment.createComment',
+        config: {
+            auth: {
+                enabled: true
+            },
+            policies: [],
+        }
+    },
+    {
+        method: 'POST',
+        path: '/comments/:commentId/like',
+        handler: 'api::comment.comment.likeComment',
         config: {
             auth: {
                 enabled: true

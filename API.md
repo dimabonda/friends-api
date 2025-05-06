@@ -1,7 +1,4 @@
-комменты подгружать по клику 
-дизайн как в инсте сверху иконка и имя а снизу сам коммент 
-можно добавить лайки комменту 
-инпут коммента как инпут создания поста 
+
 
 # Auth
 
@@ -256,6 +253,7 @@ response body (Example):
             "id": 41,
             "firstName": "Dima",
             "lastName": "Bondarenko",
+            "location": "Kharkiv",
             "photo": {
                 "id": 24,
                 "url": "/uploads/man1_77838d1bc1.webp"
@@ -266,7 +264,7 @@ response body (Example):
             "url": "/uploads/Dima_Bondarenko_kot_dlya_detskogo_multika_rasczvetka_kota_chernyj_s_89c34888_83c9_4be8_8923_51e22a04f059_0399b2c68a.png"
         },
         "likes": [],
-        "comments": []
+        "commentCount": 2
     }
 }
 
@@ -300,6 +298,7 @@ response body (Example):
             "id": 41,
             "firstName": "Dima",
             "lastName": "Bondarenko",
+            "location": "Kharkiv",
             "photo": {
                 "id": 24,
                 "url": "/uploads/man1_77838d1bc1.webp"
@@ -310,22 +309,7 @@ response body (Example):
             "url": "/uploads/Dima_Bondarenko_kot_dlya_detskogo_multika_rasczvetka_kota_chernyj_s_89c34888_83c9_4be8_8923_51e22a04f059_0399b2c68a.png"
         },
         "likes": [],
-                "comments": [
-            {
-                "id": 1,
-                "text": "comment",
-                "createdAt": "2025-02-17T19:17:52.575Z",
-                "user": {
-                    "id": 43,
-                    "firstName": "test",
-                    "lastName": "test",
-                    "photo": {
-                        "id": 22,
-                        "url": "/uploads/link12_ae19bbb34a.png"
-                    }
-                }
-            }
-        ]
+        "commentCount": 8
     }
 }
 
@@ -369,7 +353,7 @@ response body (Example):
                     "url": "/uploads/Dima_Bondarenko_kot_dlya_detskogo_multika_rasczvetka_kota_chernyj_s_89c34888_83c9_4be8_8923_51e22a04f059_8e1e712de5.png"
                 },
                 "likes": [],
-                "comments": [],
+                "commentCount": 3,
             },
             ......
             {
@@ -390,22 +374,7 @@ response body (Example):
                     "url": "/uploads/Dima_Bondarenko_kot_dlya_detskogo_multika_rasczvetka_kota_chernyj_s_89c34888_83c9_4be8_8923_51e22a04f059_b30a8d1ee4.png"
                 },
                 "likes": [],
-                "comments": [
-                    {
-                        "id": 1,
-                        "text": "comment",
-                        "createdAt": "2025-02-17T19:17:52.575Z",
-                        "user": {
-                            "id": 43,
-                            "firstName": "test",
-                            "lastName": "test",
-                            "photo": {
-                                "id": 22,
-                                "url": "/uploads/link12_ae19bbb34a.png"
-                            }
-                        }
-                    }
-                ]
+                "commentCount": 0,
             }
         ],
         "hasMore": true,
@@ -525,6 +494,7 @@ response body (Example):
         "user": {
             "firstName": "Dima",
             "lastName": "Bondarenko",
+            "location": "Kharkiv",
             "id": 41,
             "photo": {
                 "url": "/uploads/man1_77838d1bc1.webp"
@@ -543,7 +513,7 @@ response body (Example):
                 }
             }
         ],
-        "comments": []
+       "commentCount": 2
     }
 }
 
@@ -551,6 +521,36 @@ response body (Example):
 Statuses:   
 200 - Post liked successfully
 400 - User not confirmed! / Not found or blocked'
+404 - User not found
+404 - Post not found
+___
+
+
+
+## Delete post
+url: `api/post/27`    
+method: `DELETE`  
+headers: `Content-Type: application/json` 
+
+Authorization: Bearer [YOUR_TOKEN]
+
+response body (Example):
+```json
+{
+    "message": "Post deleted successfully",
+    "data": {
+        "id": 27,
+        "title": "bla bla bla",
+        "createdAt": "2025-03-19T21:30:19.348Z",
+        "updatedAt": "2025-03-25T20:42:55.008Z"
+    }
+}
+
+```
+Statuses:   
+200 - Post deleted successfully
+400 - User not confirmed! / Not found or blocked'
+403 - You are not allowed to delete this post
 404 - User not found
 404 - Post not found
 ___
@@ -593,7 +593,8 @@ response body (Example):
         },
         "post": {
             "id": 7
-        }
+        },
+        "like": []
     }
 }
 
@@ -605,8 +606,144 @@ Statuses:
 404 - Post not found
 ___
 
-## Update comment
+## Get comment list 
+
+url: `api/comments/41/list?pageSize=5&lastCommentId=12`    
+method: `GET`  
+headers: `Content-Type: application/json` 
+
+Authorization: Bearer [YOUR_TOKEN]
+
+response body (Example):
+```json
+{
+    "message": "Comments retrieved successfully",
+    "data": {
+        "comments": [
+            {
+                "createdAt": "2025-03-30T20:38:02.234Z",
+                "id": 11,
+                "text": "comment4 for 88",
+                "updatedAt": "2025-03-30T20:38:02.234Z",
+                "user": {
+                    "id": 41,
+                    "firstName": "Dima",
+                    "lastName": "Bondarenko",
+                    "photo": {
+                        "id": 24,
+                        "url": "/uploads/man1_77838d1bc1.webp"
+                    }
+                },
+                "post": {
+                    "id": 41
+                },
+                "likes": [
+                    {
+                        "id": 41,
+                        "firstName": "Dima",
+                        "lastName": "Bondarenko",
+                        "photo": {
+                            "id": 24,
+                            "url": "/uploads/man1_77838d1bc1.webp"
+                        }
+                    }
+                ]
+            },
+            ...
+            {
+                "createdAt": "2025-03-30T19:08:27.680Z",
+                "id": 9,
+                "text": "comment3 for 88 ",
+                "updatedAt": "2025-03-30T19:08:27.680Z",
+                "user": {
+                    "id": 41,
+                    "firstName": "Dima",
+                    "lastName": "Bondarenko",
+                    "photo": {
+                        "id": 24,
+                        "url": "/uploads/man1_77838d1bc1.webp"
+                    }
+                },
+                "post": {
+                    "id": 41
+                },
+                "likes": [
+                    {
+                        "id": 41,
+                        "firstName": "Dima",
+                        "lastName": "Bondarenko",
+                        "photo": {
+                            "id": 24,
+                            "url": "/uploads/man1_77838d1bc1.webp"
+                        }
+                    }
+                ]
+            },
+        ],
+        "hasMore": true,
+    }
+}
+
+```
+Statuses:   
+200 - Posts retrieved successfully
+400 - User not confirmed! / Not found or blocked'
+404 - User not found
+404 - Post not found
+___
+
+## Update comment       empty
 
 ## Like comment
 
-## Delete comment
+url: `/api/comments/8/like` 
+method: `POST`  
+headers: `Content-Type: application/json` 
+
+Authorization: Bearer [YOUR_TOKEN]
+
+response body (Example):
+```json
+{
+    "message": "Post liked",
+    "data": {
+        "id": 8,
+        "text": "comment for 88",
+        "createdAt": "2025-03-30T19:04:13.954Z",
+        "updatedAt": "2025-05-03T17:16:56.351Z",
+        "user": {
+            "firstName": "Dima",
+            "lastName": "Bondarenko",
+            "id": 41,
+            "photo": {
+                "url": "/uploads/man1_77838d1bc1.webp"
+            }
+        },
+        "post": {
+            "id": 41,
+        },
+        "likes": [
+            {
+                "firstName": "Dima",
+                "lastName": "Bondarenko",
+                "id": 41,
+                "photo": {
+                    "url": "/uploads/man1_77838d1bc1.webp"
+                }
+            }
+        ]
+    }
+}
+
+```
+Statuses:   
+200 - Post liked successfully
+400 - User not confirmed! / Not found or blocked'
+404 - User not found
+404 - Post not found
+___
+
+
+
+
+## Delete comment       empty

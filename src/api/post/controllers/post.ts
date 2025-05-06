@@ -129,19 +129,12 @@ export default factories.createCoreController('api::post.post', ({strapi}) => ({
 
 
             const data = await strapi.service('api::post.post').getPostsWithPagination(lastPostId, pageSize, null);
-
-            // const totalPosts = await strapi.service('api::post.post').getCoutPosts(null);
     
             ctx.send({
                 message: "Posts retrieved successfully",
                 data: {
                     posts: data.posts,
                     hasMore: data.hasMore,
-                    // meta: {
-                    //     totalPosts,
-                    //     currentPage: parseInt(page, 10),
-                    //     totalPages: Math.ceil(totalPosts / parseInt(pageSize, 10)),
-                    // },
                 },
             }, 200);
         } catch (error) {
@@ -234,6 +227,48 @@ export default factories.createCoreController('api::post.post', ({strapi}) => ({
             ctx.send({
                 message: response.message,
                 data: response.updatedPost,
+            }, 200);
+        } catch (error) {
+            console.error("Error", error.message);
+            ctx.internalServerError("An unexpected error occurred")
+        }
+    },
+
+    async deletePost(ctx: Context) {
+        try {
+            const { postId } = ctx.params;
+
+            const user = await strapi.plugin("users-permissions").service("user-service").getUserByRequest(ctx);
+
+            if (!user) {
+                return ctx.notFound("User not found");
+            }
+
+            if (!user.confirmed) {
+                return ctx.badRequest("User account is not confirmed.");
+            }
+
+            if (user.blocked) {
+                return ctx.badRequest("User account is blocked.");
+            }
+
+            const post = await strapi.service('api::post.post').getPostById(postId);
+
+            if (!post) {
+                return ctx.notFound("Post not found");
+            }
+
+            // Check if the user is the owner of the post
+            if (post.user.id !== user.id) {
+                return ctx.forbidden("You are not allowed to delete this post");
+            }
+
+            // Delete the post
+            const deletedPost = await strapi.entityService.delete('api::post.post', postId);
+
+            ctx.send({
+                message: 'Post deleted successfully',
+                data: deletedPost,
             }, 200);
         } catch (error) {
             console.error("Error", error.message);

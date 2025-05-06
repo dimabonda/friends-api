@@ -76,6 +76,17 @@ const Routes = [
             policies: [],
         }
     },
+    {
+        method: 'DELETE',
+        path: '/post/:postId',
+        handler: 'api::post.post.deletePost',
+        config: {
+            auth: {
+                enabled: true
+            },
+            policies: [],
+        }
+    },
     
 ];
 

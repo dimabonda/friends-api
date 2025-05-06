@@ -46,28 +46,24 @@ export default factories.createCoreService('api::post.post', ({strapi}) =>({
                         }
                     },
                     comments: {
-                        fields: ['text', 'createdAt'],
-                        populate: {
-                            user: {
-                                fields: ['firstName', 'lastName'],
-                                populate: {
-                                    photo: {
-                                        fields: ['url']
-                                    }
-                                }
-                            }
-                        }
+                        fields: ['id']
                     }
                 },
             });
 
-            const hasMore = posts.length > parseInt(pageSize, 10);
+            const postsWithCommentCount = posts.map(post => {
+                const commentCount = post.comments.length;
+                delete post.comments;
+                return { ...post, commentCount };
+            });
+
+            const hasMore = postsWithCommentCount.length > parseInt(pageSize, 10);
 
             if (hasMore) {
-                posts.pop();
+                postsWithCommentCount.pop();
             }
 
-            return { hasMore, posts}
+            return { hasMore, posts: postsWithCommentCount}
         } catch (error) {
             console.error('getPostsWithPagination error: ', error)
             throw error;
@@ -94,7 +90,7 @@ export default factories.createCoreService('api::post.post', ({strapi}) =>({
             const post = await strapi.entityService.findOne('api::post.post', postId, {
                 populate: {
                     user: {
-                        fields: ['firstName', 'lastName'],
+                        fields: ['firstName', 'lastName', 'location'],
                         populate: {
                             photo: {
                                 fields: ['url']
@@ -113,72 +109,56 @@ export default factories.createCoreService('api::post.post', ({strapi}) =>({
                         }
                     },
                     comments: {
-                        fields: ['text', 'createdAt'],
-                        populate: {
-                            user: {
-                                fields: ['firstName', 'lastName'],
-                                populate: {
-                                    photo: {
-                                        fields: ['url']
-                                    }
-                                }
-                            }
-                        }
+                        fields: ['id']
                     }
                 },
             });
-            return post
+            if (!post) return null;
+            const commentCount = post.comments.length;
+            delete post.comments;
+            return { ...post, commentCount }
         } catch (error) {
             console.error('getPostById error: ', error)
             throw error;
         }
     },
     async createPost(data): Promise<any>{
-        return new Promise(async (resolve, reject) => {
-            try {
-                const newPost = await strapi.entityService.create('api::post.post', {
-                    data,
-                    populate: {
-                        user: {
-                            fields: ['firstName', 'lastName'],
-                            populate: {
-                                photo: {
-                                    fields: ['url']
-                                }
-                            }
-                        },
-                        image: {
-                            fields: ['url'] 
-                        },
-                        likes: {
-                            fields: ['firstName', 'lastName'],
-                            populate: {
-                                photo: {
-                                    fields: ['url']
-                                }
-                            }
-                        },
-                        comments: {
-                            fields: ['text', 'createdAt'],
-                            populate: {
-                                user: {
-                                    fields: ['firstName', 'lastName'],
-                                    populate: {
-                                        photo: {
-                                            fields: ['url']
-                                        }
-                                    }
-                                }
+        try {
+            const newPost = await strapi.entityService.create('api::post.post', {
+                data,
+                populate: {
+                    user: {
+                        fields: ['firstName', 'lastName', 'location'],
+                        populate: {
+                            photo: {
+                                fields: ['url']
                             }
                         }
                     },
-                });
+                    image: {
+                        fields: ['url'] 
+                    },
+                    likes: {
+                        fields: ['firstName', 'lastName'],
+                        populate: {
+                            photo: {
+                                fields: ['url']
+                            }
+                        }
+                    },
+                    comments: {
+                        fields: ['id']
+                    }
+                },
+            });
+            const commentCount = newPost.comments.length;
+            delete newPost.comments;
 
-                resolve(newPost)
-            } catch (error) {
-                reject(error)
-            }
-        })
+            return { ...newPost, commentCount}
+        } catch (error) {
+            console.error('createPost error: ', error)
+            throw error;
+        }
     },
     async likePost(post: any, user: any): Promise<any>{
         try {
@@ -193,7 +173,7 @@ export default factories.createCoreService('api::post.post', ({strapi}) =>({
                 },
                 populate: {
                     user: {
-                        select: ['firstName', 'lastName'],
+                        select: ['firstName', 'lastName', 'location'],
                         populate: {
                             photo: {
                                 select: ['url']
@@ -212,30 +192,62 @@ export default factories.createCoreService('api::post.post', ({strapi}) =>({
                         }
                     },
                     comments: {
-                        select: ['text', 'createdAt'],
-                        populate: {
-                            user: {
-                                select: ['firstName', 'lastName'],
-                                populate: {
-                                    photo: {
-                                        select: ['url']
-                                    }
-                                }
-                            }
-                        }
+                        fields: ['id']
                     }
                 },
             });
 
+            const commentCount = updatedPost.comments.length;
+            delete updatedPost.comments;
+
             return {
                 message: isLiked ? "Post unliked" : "Post liked",
-                updatedPost,
+                updatedPost: { ...updatedPost, commentCount },
             };
 
         } catch (error) {
             console.error('likePost error: ', error)
             throw error;
         }
+    },
+    async deletePost(postId: string): Promise<any>{
+        try {
+            const post = await strapi.entityService.findOne('api::post.post', postId, {
+                populate: {
+                    user: {
+                        fields: ['firstName', 'lastName', 'location'],
+                        populate: {
+                            photo: {
+                                fields: ['url']
+                            }
+                        }
+                    },
+                    image: {
+                        fields: ['url'] 
+                    },
+                    likes: {
+                        fields: ['firstName', 'lastName'],
+                        populate: {
+                            photo: {
+                                fields: ['url']
+                            }
+                        }
+                    },
+                    comments: {
+                        fields: ['id']
+                    }
+                },
+            });
+            if (!post) return null;
+
+            
+
+            return { message: "Post deleted successfully" }
+        } catch (error) {
+            console.error('deletePost error: ', error)
+            throw error;
+        }
     }
+
 }));
 

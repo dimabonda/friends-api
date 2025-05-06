@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import _ from "lodash";
+import { sendEmail } from '../services/send-email';
 
 
 
@@ -133,6 +134,23 @@ export const register = async (ctx: Context) => {
                     fields: ['url'] 
                 },
             },
+        });
+
+        const emailTemplatePath = path.join(__dirname, '..', '..', '..', '..', '..', 'config', 'email-templates', 'pin-code.html');
+        const template = await fs.promises.readFile(emailTemplatePath, 'utf8');
+        const compiled = _.template(template);
+        
+        const code = pinGenerator();
+        await strapi.plugin("users-permissions").service("user").edit(newUser.id, { pin: code });
+
+        const html = compiled({ code });
+        const text = `Your PIN code is: ${code}`;
+
+        await sendEmail({
+            to: email.toLowerCase(),
+            subject: 'Confirm your registration with this PIN',
+            html,
+            text,
         });
 
         const jwt = strapi.plugin('users-permissions').service('jwt').issue({ id: newUser.id });
