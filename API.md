@@ -22,7 +22,6 @@ body (form-data):
 response body (Example):
 ```json
 {
-    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzUsImlhdCI6MTczNDk4OTgxMSwiZXhwIjoxNzM3NTgxODExfQ.LYBfipBImQfFDxPNaPgxtbms5028I-qVzMfwXoidW_A",
     "user": {
         "id": 35,
         "username": "dimabondarenko2404+1@gmail.com",
@@ -31,7 +30,7 @@ response body (Example):
         "email": "dimabondarenko2404+1@gmail.com",
         "location": "Kharkiv",
         "occupation": "Developer",
-        "confirmed": true,
+        "confirmed": false,
         "blocked": false,
         "role": {
             "id": 1,
@@ -58,7 +57,7 @@ ___
 
 ##  Sign In
 
-url: `api/auth/local`    
+url: `api/auth/local/login`    
 method: `POST`    
 body (JSON): 
 ```json
@@ -68,32 +67,46 @@ body (JSON):
 }
 ```
 
-response body (Example):
+response body (Example): if (confirmed === true) jwt 
 ```json
 {
-    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcsImlhdCI6MTczMDU2MjU0OSwiZXhwIjoxNzMzMTU0NTQ5fQ.V_OT-HcSrDZjVfCn677sEPnhpI7N1bh1Asz36MQhbQY",
+    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDIsImlhdCI6MTc0NjkwODIyNCwiZXhwIjoxNzQ5NTAwMjI0fQ.6_xIhjSQgHJf4rwYxrCkfmtHV15ugdX2T_gyeiAbzKc",
     "user": {
-        "id": 17,
-        "username": "User",
-        "email": "user@gmail.com",
-        "confirmed": true,
+        "id": 41,
+        "username": "dimabondarenko2404@gmail.com",
+        "firstName": "Dima",
+        "lastName": "Bondarenko",
+        "email": "dimabondarenko2404@gmail.com",
+        "location": "Kharkiv",
+        "occupation": "Developer",
+        "confirmed": false,
         "blocked": false,
-    }
+        "role": {
+            "id": 7,
+            "name": "User",
+            "description": "Role assigned to standard users.",
+            "type": "user",
+            "createdAt": "2024-10-07T19:23:28.946Z",
+            "updatedAt": "2025-05-10T17:29:36.403Z"
+        },
+        "photo": {
+            "url": "/uploads/man1_77838d1bc1.webp"
+        }
+    },
 }
 ```
 Statuses:   
-200 - OK     
+200 - OK  ||   User is not confirmed
 400 - Identifier is required
 400 - Email is required
 400 - User account is blocked
 404 - Incorrect password. Please try again
 404 - User not found
-404 - User account is not confirmed
 ___
 
-### Sent pin to email:
+## Sent pin to email:
 
-url: `api/auth/pinRequest`    
+url: `api/auth/pin-request`    
 method: `POST`  
 headers: `Content-Type: application/json`   
 body (JSON, inviteCode is optional): 
@@ -112,6 +125,53 @@ Statuses:
 200 - Pin code sent        
 400 - Email is required
 400 - Email is not valid
+404 - User not found
+___
+
+## Confirm User
+
+url: `api/auth/pin-submit`    
+method: `POST`  
+headers: `Content-Type: application/json`   
+body (JSON, inviteCode is optional): 
+```json
+{
+    "email": "user@gmail.com"
+    "pin": "803856"
+}
+```
+response body (Example):
+```json
+{
+    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjEsImlhdCI6MTc0Njg5OTkxMSwiZXhwIjoxNzQ5NDkxOTExfQ.Jjv6WP7E1jckuC9WbEv4x95Lsxac8WovWFZqJAmL1Vo",
+    "message": "User confirmed",
+    "user": {
+        "id": 61,
+        "username": "user@gmail.com",
+        "firstName": "Dima",
+        "lastName": "Bondarenko",
+        "email": "user@gmail.com",
+        "location": "Kharkiv",
+        "occupation": "Developer",
+        "confirmed": true,
+        "blocked": false,
+        "role": {
+            "id": 7,
+            "name": "User",
+            "description": "Role assigned to standard users.",
+            "type": "user",
+            "createdAt": "2024-10-07T19:23:28.946Z",
+            "updatedAt": "2025-05-10T17:29:36.403Z"
+        }
+    }
+}
+```
+Statuses:   
+200 - User confirmed        
+400 - Email is required
+400 - Email is not valid
+400 - Pin is required
+400 - Pin must be a 6-digit number
 404 - User not found
 ___
 

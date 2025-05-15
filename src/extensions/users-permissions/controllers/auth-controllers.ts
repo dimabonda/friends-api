@@ -124,7 +124,7 @@ export const register = async (ctx: Context) => {
                 location,
                 occupation,
                 role: userRole.id,
-                confirmed: true,
+                confirmed: false,
                 blocked: false,
                 photo: photoId,
             },
@@ -153,10 +153,8 @@ export const register = async (ctx: Context) => {
             text,
         });
 
-        const jwt = strapi.plugin('users-permissions').service('jwt').issue({ id: newUser.id });
-
         ctx.send({
-            jwt,
+            // jwt,
             user: userDataPublic(newUser),
             message: "User created successfully",
         }, 200)
@@ -196,9 +194,6 @@ export const login  = async (ctx: Context) => {
             return ctx.notFound("User not found")
         }
 
-        if(!user.confirmed){
-            return ctx.badRequest("User account is not confirmed.");
-        }
 
         if(user.blocked){
             return ctx.badRequest("User account is blocked.");
@@ -208,6 +203,13 @@ export const login  = async (ctx: Context) => {
 
         if(!isValidPassword){
             return ctx.badRequest("Incorrect password. Please try again.");
+        }
+
+        if (!user.confirmed) {
+            return ctx.send({
+                user: userDataPublic(user),
+                message: "User is not confirmed.",
+            }, 200);
         }
 
         const jwt = strapi.plugin('users-permissions').service('jwt').issue({id: user.id});
@@ -233,8 +235,6 @@ export const pinRequestHandler = async (ctx: Context) => {
             return ctx.badRequest(error.errors[0]);
         }
 
-        const lowerCaseEmail = email.toLowerCase();
-
         const user = await strapi.query("plugin::users-permissions.user").findOne({
             where: {
                 email
@@ -254,18 +254,19 @@ export const pinRequestHandler = async (ctx: Context) => {
         await strapi.plugin("users-permissions").service("user").edit(user.id, { pin: code });
 
          // put code to template
-        const text = compiled({ code });
-
-        // await strapi.plugins['email'].services.email.send({
-        //     to: lowerCaseEmail,
-        //     'subject': 'Pin Code',
-        //     text,
-        // });
+        const html = compiled({ code });
+        const text = `Your PIN code is: ${code}`;
+ 
+        await sendEmail({
+            to: email.toLowerCase(),
+            subject: 'Confirm your registration with this PIN',
+            html,
+            text,
+        });
      
         ctx.send({
             message: "Pin code sent",
         });
-        // console.log("pinRequestHandler work")
     } catch (error) {
         console.error("Error", error.message);
         ctx.internalServerError("An unexpected error occurred" )
@@ -281,8 +282,6 @@ export const pinSubmitHandler = async (ctx: Context) => {
         });
 
         const { email, pin } = await schema.validate(body, { abortEarly: false });
-
-        const lowerCaseEmail = email.toLowerCase();
 
         const user = await strapi.query("plugin::users-permissions.user").findOne({
             where: {
@@ -311,16 +310,22 @@ export const pinSubmitHandler = async (ctx: Context) => {
             return ctx.notFound('Role User not found')
         }
     
-        await strapi.plugin("users-permissions").service("user").edit(user.id, { 
+        const updatedUser = await strapi.plugin("users-permissions").service("user").edit(user.id, { 
             pin: '', 
             confirmed: true,
             role: userRole
         });
 
+        const jwt = strapi.plugin('users-permissions').service('jwt').issue({id: updatedUser.id});
+
         ctx.send({
+            jwt,
             message: "User confirmed",
+            user: userDataPublic(updatedUser),  
         });
     } catch (error) {
+        // console.error("Error", error.message);
+        // ctx.internalServerError("An unexpected error occurred" )
         console.error("Error", error.message);
         if (error instanceof yup.ValidationError) {
             const errorDetails = error.inner.reduce((acc: Record<string, string>, err) => {

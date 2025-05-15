@@ -18,16 +18,15 @@ export const authRoutes = [
     },
     {
         method: "POST",
-        path: "/auth/pinRequest",
+        path: "/auth/pin-request",
         handler: "auth.pinRequest",
         config: {
-            // middlewares: ["plugin::users-permissions.rateLimit"],
             prefix: "",
         },
     },
     {
         method: "POST",
-        path: "/auth/pinSubmit",
+        path: "/auth/pin-submit",
         handler: "auth.pinSubmit",
         config: {
             prefix: "",
