@@ -1,4 +1,5 @@
-
+после логина не видно друзей 
+когда добавляешь через пост 
 
 # Auth
 
@@ -211,12 +212,50 @@ response body (Example):
             "id": 24,
             "url": "/uploads/man1_77838d1bc1.webp"
         },
-        "friends": [
-            {
-                "id": 43,
-                "username": "d1@gmail.com"
-            }
-        ]
+        "friendsCount": 1
+    }
+}
+
+```
+Statuses:   
+200 - OK
+400 - User not confirmed! / Not found or blocked'
+404 - User not found
+___
+
+## Get user profile
+
+url: `aapi/user/:userId/profile`
+method: `GET`  
+
+Authorization: Bearer [YOUR_TOKEN]
+
+response body (Example):
+```json
+{
+    "user": {
+        "id": 42,
+        "username": "dimabondarenko2404+1@gmail.com",
+        "firstName": "test",
+        "lastName": "test",
+        "email": "dimabondarenko2404+1@gmail.com",
+        "location": "Kharkiv",
+        "occupation": "Develop",
+        "confirmed": true,
+        "blocked": false,
+        "role": {
+            "id": 7,
+            "name": "User",
+            "description": "Role assigned to standard users.",
+            "type": "user",
+            "createdAt": "2024-10-07T19:23:28.946Z",
+            "updatedAt": "2025-05-26T19:03:49.143Z"
+        },
+        "photo": {
+            "id": 21,
+            "url": "/uploads/link12_02dfa00bbe.png"
+        },
+        "friendsCount": 1
     }
 }
 
@@ -240,34 +279,17 @@ response body (Example):
 {
     "message": "You followed the user | You unfollowed the user",
     "isFriend": false | true,
+    "cursor": 26 | null,
     "friend": {
         "id": 41,
-        "username": "dimabondarenko2404@gmail.com",
         "firstName": "Dima",
         "lastName": "Bondarenko",
-        "email": "dimabondarenko2404@gmail.com",
         "location": "Kharkiv",
-        "occupation": "Developer",
-        "confirmed": true,
-        "blocked": false,
-        "role": {
-            "id": 1,
-            "name": "Authenticated",
-            "description": "Default role given to authenticated user.",
-            "type": "authenticated",
-            "createdAt": "2024-09-16T19:28:38.076Z",
-            "updatedAt": "2025-03-18T21:08:23.371Z"
-        },
         "photo": {
             "id": 24,
             "url": "/uploads/man1_77838d1bc1.webp"
         },
-        "friends": [
-            {
-                "id": 43,
-                "username": "d1@gmail.com"
-            }
-        ]
+        "cursor": 26 | null,
     }
 }
 
@@ -280,6 +302,51 @@ Statuses:
 400 - Friend not confirmed! / Friend account is blocked'
 404 - Friend not found
 400 - You can't follow yourself
+___
+
+## Get friends
+
+url: `api/user/65/friends?pageSize=2&lastCursor=12`
+method: `GET`  
+
+Authorization: Bearer [YOUR_TOKEN]
+
+response body (Example):
+```json
+
+{
+    "hasMore": true,
+    "friends": [
+        {
+            "id": 68,
+            "firstName": "worker2",
+            "lastName": "worker2",
+            "location": "Kharkiv",
+            "photo": {
+                "id": 62,
+                "url": "/uploads/image_1_eb097d824e.png"
+            },
+            "cursor": 11
+        },
+        {
+            "id": 69,
+            "firstName": "worker4",
+            "lastName": "worker4",
+            "location": "Kharkiv",
+            "photo": {
+                "id": 63,
+                "url": "/uploads/image_59bf390b7d.png"
+            },
+            "cursor": 10
+        }
+    ]
+}
+
+```
+Statuses:   
+200 - OK
+400 - User not confirmed! / User account is blocked'
+404 - User not found
 ___
 
 # Post

@@ -109,7 +109,6 @@ export default factories.createCoreController('api::post.post', ({strapi}) => ({
 
     async getList(ctx: Context) {
         try{
-            // const page = Array.isArray(ctx.query.page) ? ctx.query.page[0] : ctx.query.page || "1";
             const pageSize = Array.isArray(ctx.query.pageSize) ? ctx.query.pageSize[0] : ctx.query.pageSize || "10";
             const lastPostId = Array.isArray(ctx.query.lastPostId) ? ctx.query.lastPostId[0] : ctx.query.lastPostId || null;
 
@@ -127,13 +126,21 @@ export default factories.createCoreController('api::post.post', ({strapi}) => ({
                 return ctx.badRequest("User account is blocked.");
             }
 
-
             const data = await strapi.service('api::post.post').getPostsWithPagination(lastPostId, pageSize, null);
+
+            const friendIdsArray = await strapi.plugin("users-permissions").service("user-service").getUserFriendsIds(user.id);
+
+            const friendIds = new Set(friendIdsArray);
+
+            const postsWithIsFriend = data.posts.map(post => ({
+                ...post,
+                isFriend: friendIds.has(post.user.id),
+            }));
     
             ctx.send({
                 message: "Posts retrieved successfully",
                 data: {
-                    posts: data.posts,
+                    posts: postsWithIsFriend,
                     hasMore: data.hasMore,
                 },
             }, 200);

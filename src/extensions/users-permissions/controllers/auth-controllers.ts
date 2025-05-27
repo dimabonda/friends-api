@@ -212,11 +212,17 @@ export const login  = async (ctx: Context) => {
             }, 200);
         }
 
+        const friendsCount = await strapi.db.query('api::friend-link.friend-link').count({
+			where: {
+				user: user.id,
+			}
+		});
+
         const jwt = strapi.plugin('users-permissions').service('jwt').issue({id: user.id});
 
         ctx.send({
             jwt,
-            user: userDataPublic(user),
+            user: userDataPublic({...user, friendsCount}),
         }, 200)
     } catch (error) {
         console.error("Error", error.message);

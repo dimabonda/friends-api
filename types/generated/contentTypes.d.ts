@@ -407,6 +407,45 @@ export interface ApiCommentComment extends Schema.CollectionType {
   };
 }
 
+export interface ApiFriendLinkFriendLink extends Schema.CollectionType {
+  collectionName: 'friend_links';
+  info: {
+    singularName: 'friend-link';
+    pluralName: 'friend-links';
+    displayName: 'FriendLink';
+    description: '';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    user: Attribute.Relation<
+      'api::friend-link.friend-link',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    friend: Attribute.Relation<
+      'api::friend-link.friend-link',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::friend-link.friend-link',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::friend-link.friend-link',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiPostPost extends Schema.CollectionType {
   collectionName: 'posts';
   info: {
@@ -865,10 +904,15 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'oneToMany',
       'api::post.post'
     >;
-    friends: Attribute.Relation<
+    friend_links: Attribute.Relation<
       'plugin::users-permissions.user',
       'oneToMany',
-      'plugin::users-permissions.user'
+      'api::friend-link.friend-link'
+    >;
+    friend_links_as_friend: Attribute.Relation<
+      'plugin::users-permissions.user',
+      'oneToMany',
+      'api::friend-link.friend-link'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -898,6 +942,7 @@ declare module '@strapi/types' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'api::comment.comment': ApiCommentComment;
+      'api::friend-link.friend-link': ApiFriendLinkFriendLink;
       'api::post.post': ApiPostPost;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;

@@ -8,6 +8,8 @@ import {
 import { 
     me,
     followFriend,
+    getUserFriendsList,
+    getUserProfile,
 } from "./controllers/user-controllers";
 import userServices from './services/user';
 import { authRoutes } from "./routes/auth-routes";
@@ -25,6 +27,8 @@ const customPlugins = (plugin: any) => {
 
     plugin.controllers.user.me = me;
     plugin.controllers.user.followFriend = followFriend;
+    plugin.controllers.user.getUserFriendsList = getUserFriendsList;
+    plugin.controllers.user.getUserProfile = getUserProfile;
 
     return plugin;
 }

@@ -23,7 +23,6 @@ export default factories.createCoreService('api::post.post', ({strapi}) =>({
             const posts = await strapi.entityService.findMany('api::post.post',{
                 filters: filters,
                 limit: parseInt(pageSize, 10) + 1,       
-                // start: (parseInt(page, 10) - 1) * parseInt(pageSize, 10),
                 sort: [{ createdAt: 'desc' }],
                 populate: {
                     user: {

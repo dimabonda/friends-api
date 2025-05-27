@@ -12,7 +12,7 @@ interface UserDataPublic {
     blocked: boolean,
     role: object,
     photo: object,
-	friends: object[],
+	friendsCount: number,
 }
 
 export const userDataPublic = (user: any): UserDataPublic => {
@@ -28,7 +28,7 @@ export const userDataPublic = (user: any): UserDataPublic => {
         blocked: user.blocked,
         role: user.role,
         photo: user.photo,
-		friends: user.friends
+		friendsCount: user.friendsCount
     }
 }
 
@@ -61,22 +61,48 @@ const getUserIdByToken = async (token: string): Promise<number> => {
 
 const getUserById = async (id: number): Promise<any> => {
 	try {
-		return strapi.entityService.findOne('plugin::users-permissions.user', id, {
+		const user = await strapi.entityService.findOne('plugin::users-permissions.user', id, {
 			populate: {
 				role: true,
 				photo: {
-					fields: ['url'] 
-				},
-				friends: {
-					fields: ['username', 'id']
+					fields: ['url']
 				},
 			},
 		});
+
+		const friendsCount = await strapi.db.query('api::friend-link.friend-link').count({
+			where: {
+				user: id,
+			}
+		});
+
+		return {
+			...user,
+			friendsCount,
+		};
 	} catch (err) {
 		console.error('getUserById error: ', err)
 		throw err;
 	}
 }
+
+const getUserFriendsIds = async (id: number): Promise<number[]> => {
+	try {
+		const links = await strapi.entityService.findMany('api::friend-link.friend-link', {
+			filters: { user: id },
+				populate: {
+					friend: { fields: ['id'] },
+				},
+			});
+
+		return links.map(link => link.friend.id) || [];	
+
+	} catch (err) {
+		console.error('getUserFriendsIds error: ', err);
+		throw err;
+	}
+};
+
 const getUserByToken = async (token: string): Promise<any> => {
 	try {
 		const id = await getUserIdByToken(token)
@@ -107,27 +133,51 @@ export const getUserByRequest = async (ctx: Context): Promise<any | void> => {
 	}
 };
 
-export const followFriend = async (userId: string, friendId: string): Promise<any | void> => {
+export const checkIsUserFriend = async (userId: number, targetUserId: number): Promise<boolean> => {
 	try {
-		const user = await getUserById(Number(userId));
-		if(!user) {
-			throw new Error('User Id not found');
+		const result = await strapi.entityService.findMany('api::friend-link.friend-link', {
+			filters: {
+				user: userId,
+				friend: targetUserId,
+			},
+			limit: 1,
+		});
+		return result.length > 0;
+	} catch (err) {
+		console.error('checkIsUserFriend error:', err);
+		throw err;
+	}
+};
+
+
+export const followFriend = async (userId: number, friendId: number): Promise<any | void> => {
+	try {
+
+		const isFriend = await checkIsUserFriend(userId, friendId);
+
+		let cursor = null;
+
+		if (isFriend) {
+			await strapi.db.query('api::friend-link.friend-link').delete({
+				where: {
+					user: userId,
+					friend: friendId,
+				}
+			});
+		} else {
+			const doc = await strapi.entityService.create('api::friend-link.friend-link', {
+				data: {
+					user: userId,
+					friend: friendId,
+				},
+			});
+			cursor = doc.id;
 		}
 
-		const isFriend = user.friends.some((friend) => friend.id === Number(friendId));
-
-		const updatedUser = await strapi.db.query('plugin::users-permissions.user').update({
-			where: { id: userId },
-			data: {
-				friends: isFriend
-					? { disconnect: [{ id: friendId }] }
-					: { connect: [{ id: friendId }] },
-			}
-		});
-		
-		return { 
-			message: isFriend ? "You unfollowed the user" : "You followed the user",
+		return {
+			message: isFriend ? 'You unfollowed the user' : 'You followed the user',
 			isFriend: !isFriend,
+			cursor,
 		};
 
 	} catch (error) {
@@ -135,6 +185,52 @@ export const followFriend = async (userId: string, friendId: string): Promise<an
 		throw error;
 	}
 }
+
+export const getUserFriendsWithPagination = async (
+	lastFriendLinkId: string | null,
+	pageSize: string,
+	userId: number
+): Promise<{ hasMore: boolean; friends: any[] }> => {
+	try {
+		const filters: any = { user: userId };
+		console.log('lastFriendLinkId', typeof lastFriendLinkId);
+		if (lastFriendLinkId) {
+			filters.id = { $lt: Number(lastFriendLinkId) };
+		}
+
+		const friendLinks = await strapi.entityService.findMany('api::friend-link.friend-link', {
+			filters,
+			sort: [{ id: 'desc' }],
+			limit: parseInt(pageSize, 10) + 1,
+			populate: {
+				friend: {
+				fields: ['id', 'firstName', 'lastName', 'location'],
+					populate: {
+						photo: { fields: ['url'] },
+					},
+				},
+			},
+		});
+
+		const hasMore = friendLinks.length > parseInt(pageSize, 10);
+		if (hasMore) friendLinks.pop();
+
+		const friends = friendLinks
+		.filter(link => link.friend)
+		.map(link => ({
+			...link.friend,
+			cursor: link.id,
+		}));
+
+		return {
+			hasMore,
+			friends,
+		};
+	} catch (error) {
+		console.error('getUserFriendsWithPagination error:', error);
+		throw new Error('Failed to load friends');
+	}
+};
 
 
 export default {
@@ -146,6 +242,8 @@ export default {
         getUserByToken,
         getUserByRequest,
 		followFriend,
+		getUserFriendsIds,
+		getUserFriendsWithPagination,
       }
     }
   }
