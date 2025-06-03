@@ -518,7 +518,7 @@ ___
 
 ## Get post list by user
 
-url: `api/post/:userId/list?page=1&pageSize=10`    
+url: `/api/post-list/all?userId=42&pageSize=2&lastPostId=47`    
 method: `GET`  
 headers: `Content-Type: application/json` 
 
@@ -531,65 +531,70 @@ response body (Example):
     "data": {
         "posts": [
             {
-                "createdAt": "2025-01-27T19:41:24.448Z",
-                "id": 5,
-                "title": "This is my first post",
-                "updatedAt": "2025-01-27T19:41:24.448Z",
+                "createdAt": "2025-05-17T22:33:47.006Z",
+                "id": 47,
+                "title": "84",
+                "updatedAt": "2025-05-20T21:14:16.643Z",
                 "user": {
-                    "firstName": "Dima",
-                    "lastName": "Bondarenko",
-                    "id": 41,
+                    "id": 42,
+                    "firstName": "test",
+                    "lastName": "test",
+                    "location": "Kyiv",
                     "photo": {
-                        "url": "/uploads/man1_77838d1bc1.webp"
+                        "id": 21,
+                        "url": "/uploads/link12_02dfa00bbe.png"
                     }
                 },
-                "image": {
-                    "url": "/uploads/Dima_Bondarenko_kot_dlya_detskogo_multika_rasczvetka_kota_chernyj_s_89c34888_83c9_4be8_8923_51e22a04f059_8e1e712de5.png"
-                },
-                "likes": [],
-                "comments": [],
-            },
-            ......
-            {
-                "createdAt": "2025-01-27T21:17:22.131Z",
-                "id": 9,
-                "title": "This is my first post",
-                "updatedAt": "2025-01-27T21:17:22.131Z",
-                "user": {
-                    "firstName": "Dima",
-                    "lastName": "Bondarenko",
-                    "id": 41,
-                    "photo": {
-                        "url": "/uploads/man1_77838d1bc1.webp"
-                    }
-                },
-                "image": {
-                    "url": "/uploads/Dima_Bondarenko_kot_dlya_detskogo_multika_rasczvetka_kota_chernyj_s_89c34888_83c9_4be8_8923_51e22a04f059_b30a8d1ee4.png"
-                },
-                "likes": [],
-                "comments": [
+                "image": null,
+                "likes": [
                     {
-                        "id": 1,
-                        "text": "comment",
-                        "createdAt": "2025-02-17T19:17:52.575Z",
-                        "user": {
-                            "id": 43,
-                            "firstName": "test",
-                            "lastName": "test",
-                            "photo": {
-                                "id": 22,
-                                "url": "/uploads/link12_ae19bbb34a.png"
-                            }
+                        "id": 65,
+                        "firstName": "test",
+                        "lastName": "test",
+                        "photo": {
+                            "id": 59,
+                            "url": "/uploads/2025_05_04_20_24_01_63dd848b18.jpg"
                         }
                     }
-                ]
-            }
+                ],
+                "commentCount": 0,
+                "isFriend": true
+            },
+            {
+                "createdAt": "2025-03-18T20:53:03.084Z",
+                "id": 26,
+                "title": "this is new post ",
+                "updatedAt": "2025-05-15T21:39:16.046Z",
+                "user": {
+                    "id": 42,
+                    "firstName": "test",
+                    "lastName": "test",
+                    "location": "Kyiv",
+                    "photo": {
+                        "id": 21,
+                        "url": "/uploads/link12_02dfa00bbe.png"
+                    }
+                },
+                "image": {
+                    "id": 38,
+                    "url": "/uploads/industry_ready_back_image480_35e58a34dd.png"
+                },
+                "likes": [
+                    {
+                        "id": 42,
+                        "firstName": "test",
+                        "lastName": "test",
+                        "photo": {
+                            "id": 21,
+                            "url": "/uploads/link12_02dfa00bbe.png"
+                        }
+                    }
+                ],
+                "commentCount": 2,
+                "isFriend": true
+            },
         ],
-        "meta": {
-            "totalPosts": 7,
-            "currentPage": 1,
-            "totalPages": 2
-        }
+        "hasMore": false
     }
 }
 

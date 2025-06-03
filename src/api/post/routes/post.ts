@@ -45,8 +45,8 @@ const Routes = [
     },
     {
         method: 'GET',
-        path: '/post/:userId/list',
-        handler: 'api::post.post.getListByUser',
+        path: '/post-list/all',
+        handler: 'api::post.post.getPostsList',
         config: {
             auth: {
                 enabled: true

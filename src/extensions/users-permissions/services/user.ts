@@ -193,7 +193,6 @@ export const getUserFriendsWithPagination = async (
 ): Promise<{ hasMore: boolean; friends: any[] }> => {
 	try {
 		const filters: any = { user: userId };
-		console.log('lastFriendLinkId', typeof lastFriendLinkId);
 		if (lastFriendLinkId) {
 			filters.id = { $lt: Number(lastFriendLinkId) };
 		}
@@ -232,6 +231,71 @@ export const getUserFriendsWithPagination = async (
 	}
 };
 
+export const getUserFriendsWithPaginationAndQuery = async (
+	lastUserId: string | null,
+	pageSize: string,
+	query: string,
+	currentUserId: number,
+): Promise<{ hasMore: boolean; users: any[], totalCount: number }> => {
+	try{
+    const filters: any = {
+      $or: [
+        { firstName: { $containsi: query } },
+        { lastName: { $containsi: query } },
+      ],
+    };
+
+    if (lastUserId) {
+      filters.id = { $lt: Number(lastUserId) };
+    }
+
+	const totalCount = await strapi.entityService.count('plugin::users-permissions.user', {
+      filters,
+    });
+
+    const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+      filters,
+      sort: [{ id: 'desc' }],
+      limit: parseInt(pageSize, 10) + 1,
+      populate: {
+        photo: { fields: ['url'] },
+      },
+      fields: ['id', 'firstName', 'lastName', 'location'],
+    });
+
+    const hasMore = users.length > parseInt(pageSize, 10);
+    if (hasMore) users.pop();
+
+    const friendLinks = await strapi.entityService.findMany('api::friend-link.friend-link', {
+      filters: {
+        user: currentUserId,
+      },
+      populate: {
+        friend: { fields: ['id'] },
+      },
+    });
+
+    const friendIds = new Set(friendLinks.map(link => link.friend?.id));
+
+    const result = users.map(user => ({
+      ...user,
+      cursor: user.id,
+      isFriend: friendIds.has(user.id),
+    }));
+
+    return {
+      hasMore,
+      users: result,
+	  totalCount,
+    };
+
+	} catch (error) {
+		console.error('getUserFriendsWithPagination error:', error);
+		throw new Error('Failed to load friends');
+	}
+}
+
+
 
 export default {
     services: {
@@ -244,6 +308,7 @@ export default {
 		followFriend,
 		getUserFriendsIds,
 		getUserFriendsWithPagination,
+		getUserFriendsWithPaginationAndQuery,
       }
     }
   }

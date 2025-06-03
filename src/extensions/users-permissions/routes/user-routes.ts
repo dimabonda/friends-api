@@ -23,10 +23,18 @@ export const userRoutes = [
             prefix: "",
         },
     },
-     {
+    {
         method: "GET",
         path: "/user/:userId/profile",
         handler: "user.getUserProfile",
+        config: {
+            prefix: "",
+        },
+    },
+     {
+        method: "GET",
+        path: "/user/search/all-users",
+        handler: "user.getUserListSearch",
         config: {
             prefix: "",
         },

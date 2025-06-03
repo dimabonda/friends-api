@@ -167,3 +167,35 @@ export const getUserFriendsList = async (ctx: Context) => {
         ctx.internalServerError("An unexpected error occurred" )
     }
 }
+
+export const getUserListSearch = async (ctx: Context) => {
+    try {
+        const pageSize = Array.isArray(ctx.query.pageSize) ? ctx.query.pageSize[0] : ctx.query.pageSize || "10";
+        const lastUserId = Array.isArray(ctx.query.lastCursor) ? ctx.query.lastCursor[0] : ctx.query.lastCursor || null;
+        const query = (ctx.query.query || "").toString().toLowerCase();
+
+        const user = await strapi.plugin("users-permissions").service("user-service").getUserByRequest(ctx);
+
+        if(!user){
+            return ctx.notFound("User not found")
+        }
+
+        if(!user.confirmed){
+            return ctx.badRequest("User account is not confirmed.");
+        }
+
+        if(user.blocked){
+            return ctx.badRequest("User account is blocked.");
+        }
+
+        const friends = await strapi.plugin("users-permissions").service("user-service").getUserFriendsWithPaginationAndQuery(lastUserId, pageSize, query, user.id);
+
+        ctx.send({
+            ...friends,
+        }, 200)
+
+    } catch (error) {
+        console.error("Error", error.message);
+        ctx.internalServerError("An unexpected error occurred" )
+    }
+}
