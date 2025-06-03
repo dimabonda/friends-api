@@ -1,4 +1,5 @@
-
+после логина не видно друзей 
+когда добавляешь через пост 
 
 # Auth
 
@@ -22,7 +23,6 @@ body (form-data):
 response body (Example):
 ```json
 {
-    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzUsImlhdCI6MTczNDk4OTgxMSwiZXhwIjoxNzM3NTgxODExfQ.LYBfipBImQfFDxPNaPgxtbms5028I-qVzMfwXoidW_A",
     "user": {
         "id": 35,
         "username": "dimabondarenko2404+1@gmail.com",
@@ -31,7 +31,7 @@ response body (Example):
         "email": "dimabondarenko2404+1@gmail.com",
         "location": "Kharkiv",
         "occupation": "Developer",
-        "confirmed": true,
+        "confirmed": false,
         "blocked": false,
         "role": {
             "id": 1,
@@ -58,7 +58,7 @@ ___
 
 ##  Sign In
 
-url: `api/auth/local`    
+url: `api/auth/local/login`    
 method: `POST`    
 body (JSON): 
 ```json
@@ -68,32 +68,46 @@ body (JSON):
 }
 ```
 
-response body (Example):
+response body (Example): if (confirmed === true) jwt 
 ```json
 {
-    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTcsImlhdCI6MTczMDU2MjU0OSwiZXhwIjoxNzMzMTU0NTQ5fQ.V_OT-HcSrDZjVfCn677sEPnhpI7N1bh1Asz36MQhbQY",
+    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDIsImlhdCI6MTc0NjkwODIyNCwiZXhwIjoxNzQ5NTAwMjI0fQ.6_xIhjSQgHJf4rwYxrCkfmtHV15ugdX2T_gyeiAbzKc",
     "user": {
-        "id": 17,
-        "username": "User",
-        "email": "user@gmail.com",
-        "confirmed": true,
+        "id": 41,
+        "username": "dimabondarenko2404@gmail.com",
+        "firstName": "Dima",
+        "lastName": "Bondarenko",
+        "email": "dimabondarenko2404@gmail.com",
+        "location": "Kharkiv",
+        "occupation": "Developer",
+        "confirmed": false,
         "blocked": false,
-    }
+        "role": {
+            "id": 7,
+            "name": "User",
+            "description": "Role assigned to standard users.",
+            "type": "user",
+            "createdAt": "2024-10-07T19:23:28.946Z",
+            "updatedAt": "2025-05-10T17:29:36.403Z"
+        },
+        "photo": {
+            "url": "/uploads/man1_77838d1bc1.webp"
+        }
+    },
 }
 ```
 Statuses:   
-200 - OK     
+200 - OK  ||   User is not confirmed
 400 - Identifier is required
 400 - Email is required
 400 - User account is blocked
 404 - Incorrect password. Please try again
 404 - User not found
-404 - User account is not confirmed
 ___
 
-### Sent pin to email:
+## Sent pin to email:
 
-url: `api/auth/pinRequest`    
+url: `api/auth/pin-request`    
 method: `POST`  
 headers: `Content-Type: application/json`   
 body (JSON, inviteCode is optional): 
@@ -112,6 +126,53 @@ Statuses:
 200 - Pin code sent        
 400 - Email is required
 400 - Email is not valid
+404 - User not found
+___
+
+## Confirm User
+
+url: `api/auth/pin-submit`    
+method: `POST`  
+headers: `Content-Type: application/json`   
+body (JSON, inviteCode is optional): 
+```json
+{
+    "email": "user@gmail.com"
+    "pin": "803856"
+}
+```
+response body (Example):
+```json
+{
+    "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjEsImlhdCI6MTc0Njg5OTkxMSwiZXhwIjoxNzQ5NDkxOTExfQ.Jjv6WP7E1jckuC9WbEv4x95Lsxac8WovWFZqJAmL1Vo",
+    "message": "User confirmed",
+    "user": {
+        "id": 61,
+        "username": "user@gmail.com",
+        "firstName": "Dima",
+        "lastName": "Bondarenko",
+        "email": "user@gmail.com",
+        "location": "Kharkiv",
+        "occupation": "Developer",
+        "confirmed": true,
+        "blocked": false,
+        "role": {
+            "id": 7,
+            "name": "User",
+            "description": "Role assigned to standard users.",
+            "type": "user",
+            "createdAt": "2024-10-07T19:23:28.946Z",
+            "updatedAt": "2025-05-10T17:29:36.403Z"
+        }
+    }
+}
+```
+Statuses:   
+200 - User confirmed        
+400 - Email is required
+400 - Email is not valid
+400 - Pin is required
+400 - Pin must be a 6-digit number
 404 - User not found
 ___
 
@@ -151,12 +212,50 @@ response body (Example):
             "id": 24,
             "url": "/uploads/man1_77838d1bc1.webp"
         },
-        "friends": [
-            {
-                "id": 43,
-                "username": "d1@gmail.com"
-            }
-        ]
+        "friendsCount": 1
+    }
+}
+
+```
+Statuses:   
+200 - OK
+400 - User not confirmed! / Not found or blocked'
+404 - User not found
+___
+
+## Get user profile
+
+url: `aapi/user/:userId/profile`
+method: `GET`  
+
+Authorization: Bearer [YOUR_TOKEN]
+
+response body (Example):
+```json
+{
+    "user": {
+        "id": 42,
+        "username": "dimabondarenko2404+1@gmail.com",
+        "firstName": "test",
+        "lastName": "test",
+        "email": "dimabondarenko2404+1@gmail.com",
+        "location": "Kharkiv",
+        "occupation": "Develop",
+        "confirmed": true,
+        "blocked": false,
+        "role": {
+            "id": 7,
+            "name": "User",
+            "description": "Role assigned to standard users.",
+            "type": "user",
+            "createdAt": "2024-10-07T19:23:28.946Z",
+            "updatedAt": "2025-05-26T19:03:49.143Z"
+        },
+        "photo": {
+            "id": 21,
+            "url": "/uploads/link12_02dfa00bbe.png"
+        },
+        "friendsCount": 1
     }
 }
 
@@ -180,34 +279,17 @@ response body (Example):
 {
     "message": "You followed the user | You unfollowed the user",
     "isFriend": false | true,
+    "cursor": 26 | null,
     "friend": {
         "id": 41,
-        "username": "dimabondarenko2404@gmail.com",
         "firstName": "Dima",
         "lastName": "Bondarenko",
-        "email": "dimabondarenko2404@gmail.com",
         "location": "Kharkiv",
-        "occupation": "Developer",
-        "confirmed": true,
-        "blocked": false,
-        "role": {
-            "id": 1,
-            "name": "Authenticated",
-            "description": "Default role given to authenticated user.",
-            "type": "authenticated",
-            "createdAt": "2024-09-16T19:28:38.076Z",
-            "updatedAt": "2025-03-18T21:08:23.371Z"
-        },
         "photo": {
             "id": 24,
             "url": "/uploads/man1_77838d1bc1.webp"
         },
-        "friends": [
-            {
-                "id": 43,
-                "username": "d1@gmail.com"
-            }
-        ]
+        "cursor": 26 | null,
     }
 }
 
@@ -220,6 +302,51 @@ Statuses:
 400 - Friend not confirmed! / Friend account is blocked'
 404 - Friend not found
 400 - You can't follow yourself
+___
+
+## Get friends
+
+url: `api/user/65/friends?pageSize=2&lastCursor=12`
+method: `GET`  
+
+Authorization: Bearer [YOUR_TOKEN]
+
+response body (Example):
+```json
+
+{
+    "hasMore": true,
+    "friends": [
+        {
+            "id": 68,
+            "firstName": "worker2",
+            "lastName": "worker2",
+            "location": "Kharkiv",
+            "photo": {
+                "id": 62,
+                "url": "/uploads/image_1_eb097d824e.png"
+            },
+            "cursor": 11
+        },
+        {
+            "id": 69,
+            "firstName": "worker4",
+            "lastName": "worker4",
+            "location": "Kharkiv",
+            "photo": {
+                "id": 63,
+                "url": "/uploads/image_59bf390b7d.png"
+            },
+            "cursor": 10
+        }
+    ]
+}
+
+```
+Statuses:   
+200 - OK
+400 - User not confirmed! / User account is blocked'
+404 - User not found
 ___
 
 # Post
@@ -391,7 +518,7 @@ ___
 
 ## Get post list by user
 
-url: `api/post/:userId/list?page=1&pageSize=10`    
+url: `/api/post-list/all?userId=42&pageSize=2&lastPostId=47`    
 method: `GET`  
 headers: `Content-Type: application/json` 
 
@@ -404,65 +531,70 @@ response body (Example):
     "data": {
         "posts": [
             {
-                "createdAt": "2025-01-27T19:41:24.448Z",
-                "id": 5,
-                "title": "This is my first post",
-                "updatedAt": "2025-01-27T19:41:24.448Z",
+                "createdAt": "2025-05-17T22:33:47.006Z",
+                "id": 47,
+                "title": "84",
+                "updatedAt": "2025-05-20T21:14:16.643Z",
                 "user": {
-                    "firstName": "Dima",
-                    "lastName": "Bondarenko",
-                    "id": 41,
+                    "id": 42,
+                    "firstName": "test",
+                    "lastName": "test",
+                    "location": "Kyiv",
                     "photo": {
-                        "url": "/uploads/man1_77838d1bc1.webp"
+                        "id": 21,
+                        "url": "/uploads/link12_02dfa00bbe.png"
                     }
                 },
-                "image": {
-                    "url": "/uploads/Dima_Bondarenko_kot_dlya_detskogo_multika_rasczvetka_kota_chernyj_s_89c34888_83c9_4be8_8923_51e22a04f059_8e1e712de5.png"
-                },
-                "likes": [],
-                "comments": [],
-            },
-            ......
-            {
-                "createdAt": "2025-01-27T21:17:22.131Z",
-                "id": 9,
-                "title": "This is my first post",
-                "updatedAt": "2025-01-27T21:17:22.131Z",
-                "user": {
-                    "firstName": "Dima",
-                    "lastName": "Bondarenko",
-                    "id": 41,
-                    "photo": {
-                        "url": "/uploads/man1_77838d1bc1.webp"
-                    }
-                },
-                "image": {
-                    "url": "/uploads/Dima_Bondarenko_kot_dlya_detskogo_multika_rasczvetka_kota_chernyj_s_89c34888_83c9_4be8_8923_51e22a04f059_b30a8d1ee4.png"
-                },
-                "likes": [],
-                "comments": [
+                "image": null,
+                "likes": [
                     {
-                        "id": 1,
-                        "text": "comment",
-                        "createdAt": "2025-02-17T19:17:52.575Z",
-                        "user": {
-                            "id": 43,
-                            "firstName": "test",
-                            "lastName": "test",
-                            "photo": {
-                                "id": 22,
-                                "url": "/uploads/link12_ae19bbb34a.png"
-                            }
+                        "id": 65,
+                        "firstName": "test",
+                        "lastName": "test",
+                        "photo": {
+                            "id": 59,
+                            "url": "/uploads/2025_05_04_20_24_01_63dd848b18.jpg"
                         }
                     }
-                ]
-            }
+                ],
+                "commentCount": 0,
+                "isFriend": true
+            },
+            {
+                "createdAt": "2025-03-18T20:53:03.084Z",
+                "id": 26,
+                "title": "this is new post ",
+                "updatedAt": "2025-05-15T21:39:16.046Z",
+                "user": {
+                    "id": 42,
+                    "firstName": "test",
+                    "lastName": "test",
+                    "location": "Kyiv",
+                    "photo": {
+                        "id": 21,
+                        "url": "/uploads/link12_02dfa00bbe.png"
+                    }
+                },
+                "image": {
+                    "id": 38,
+                    "url": "/uploads/industry_ready_back_image480_35e58a34dd.png"
+                },
+                "likes": [
+                    {
+                        "id": 42,
+                        "firstName": "test",
+                        "lastName": "test",
+                        "photo": {
+                            "id": 21,
+                            "url": "/uploads/link12_02dfa00bbe.png"
+                        }
+                    }
+                ],
+                "commentCount": 2,
+                "isFriend": true
+            },
         ],
-        "meta": {
-            "totalPosts": 7,
-            "currentPage": 1,
-            "totalPages": 2
-        }
+        "hasMore": false
     }
 }
 

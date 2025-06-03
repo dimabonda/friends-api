@@ -101,10 +101,17 @@
       "target": "api::post.post",
       "mappedBy": "user"
     },
-    "friends": {
+    "friend_links": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "plugin::users-permissions.user"
+      "target": "api::friend-link.friend-link",
+      "mappedBy": "user"
+    },
+    "friend_links_as_friend": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::friend-link.friend-link",
+      "mappedBy": "friend"
     }
   }
 }

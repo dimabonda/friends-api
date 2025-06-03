@@ -109,7 +109,6 @@ export default factories.createCoreController('api::post.post', ({strapi}) => ({
 
     async getList(ctx: Context) {
         try{
-            // const page = Array.isArray(ctx.query.page) ? ctx.query.page[0] : ctx.query.page || "1";
             const pageSize = Array.isArray(ctx.query.pageSize) ? ctx.query.pageSize[0] : ctx.query.pageSize || "10";
             const lastPostId = Array.isArray(ctx.query.lastPostId) ? ctx.query.lastPostId[0] : ctx.query.lastPostId || null;
 
@@ -127,13 +126,21 @@ export default factories.createCoreController('api::post.post', ({strapi}) => ({
                 return ctx.badRequest("User account is blocked.");
             }
 
-
             const data = await strapi.service('api::post.post').getPostsWithPagination(lastPostId, pageSize, null);
+
+            const friendIdsArray = await strapi.plugin("users-permissions").service("user-service").getUserFriendsIds(user.id);
+
+            const friendIds = new Set(friendIdsArray);
+
+            const postsWithIsFriend = data.posts.map(post => ({
+                ...post,
+                isFriend: friendIds.has(post.user.id),
+            }));
     
             ctx.send({
                 message: "Posts retrieved successfully",
                 data: {
-                    posts: data.posts,
+                    posts: postsWithIsFriend,
                     hasMore: data.hasMore,
                 },
             }, 200);
@@ -143,12 +150,18 @@ export default factories.createCoreController('api::post.post', ({strapi}) => ({
         }
     },
 
-    async getListByUser(ctx: Context) {
+    async getPostsList(ctx: Context) {
         try {
-            const page = Array.isArray(ctx.query.page) ? ctx.query.page[0] : ctx.query.page || "1";
-            const pageSize = Array.isArray(ctx.query.pageSize) ? ctx.query.pageSize[0] : ctx.query.pageSize || "10";
+            const getParam = (q: any) => {
+                const value = Array.isArray(q) ? q[0] : q;
+                return (value === 'null' || value === 'undefined') ? null : value;
+            };
+            const pageSize = parseInt(getParam(ctx.query.pageSize) || "10", 10);
+            const lastPostIdRaw = getParam(ctx.query.lastPostId);
+            const userIdRaw = getParam(ctx.query.userId);
 
-            const { userId } = ctx.params;
+            const lastPostId = lastPostIdRaw ? parseInt(lastPostIdRaw, 10) : null;
+            const userId = userIdRaw ? parseInt(userIdRaw, 10) : null;
 
             const user = await strapi.plugin("users-permissions").service("user-service").getUserByRequest(ctx);
     
@@ -164,35 +177,25 @@ export default factories.createCoreController('api::post.post', ({strapi}) => ({
                 return ctx.badRequest("User account is blocked.");
             }
 
-            const userWithPost = await strapi.plugin("users-permissions").service("user-service").getUserById(userId);
+            const data = await strapi.service('api::post.post').getPostsWithPagination(lastPostId, pageSize, userId);
 
-            if (!userWithPost) {
-                return ctx.notFound("User not found");
-            }
-    
-            if (!userWithPost.confirmed) {
-                return ctx.badRequest("User account is not confirmed.");
-            }
-    
-            if (userWithPost.blocked) {
-                return ctx.badRequest("User account is blocked.");
-            }
+            const friendIdsArray = await strapi.plugin("users-permissions").service("user-service").getUserFriendsIds(user.id);
 
-            const posts = await strapi.service('api::post.post').getPostsWithPagination(page, pageSize, userWithPost.id);
-    
-            const totalPosts = await strapi.service('api::post.post').getCoutPosts(userWithPost.id);
-    
+            const friendIds = new Set(friendIdsArray);
+
+            const postsWithIsFriend = data.posts.map(post => ({
+                ...post,
+                isFriend: friendIds.has(post.user.id),
+            }));
+
             ctx.send({
                 message: "Posts retrieved successfully",
                 data: {
-                    posts,
-                    meta: {
-                        totalPosts,
-                        currentPage: parseInt(page, 10),
-                        totalPages: Math.ceil(totalPosts / parseInt(pageSize, 10)),
-                    },
+                    posts: postsWithIsFriend,
+                    hasMore: data.hasMore,
                 },
             }, 200);
+    
         } catch (error) {
             console.error("Error", error.message);
             ctx.internalServerError("An unexpected error occurred" )
