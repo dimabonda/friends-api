@@ -112,6 +112,9 @@
       "relation": "oneToMany",
       "target": "api::friend-link.friend-link",
       "mappedBy": "friend"
+    },
+    "resetPasswordPin": {
+      "type": "string"
     }
   }
 }

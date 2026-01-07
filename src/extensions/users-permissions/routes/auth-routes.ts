@@ -32,4 +32,20 @@ export const authRoutes = [
             prefix: "",
         },
     },
+    {
+        method: "POST",
+        path: "/auth/reset-pin-request",
+        handler: "auth.resetPinRequest",
+        config: {
+            prefix: "",
+        },
+    },
+    {
+        method: "POST",
+        path: "/auth/reset-pin-submit",
+        handler: "auth.resetPinSubmit",
+        config: {
+            prefix: "",
+        },
+    },
 ];

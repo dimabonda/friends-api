@@ -4,6 +4,8 @@ import {
     login,
     pinRequestHandler,
     pinSubmitHandler,
+    resetPinRequestHandler,
+    resetPinSubmitHandler,
 } from "./controllers/auth-controllers";
 import { 
     me,
@@ -25,6 +27,8 @@ const customPlugins = (plugin: any) => {
     plugin.controllers.auth.login = login;
     plugin.controllers.auth.pinRequest = pinRequestHandler;
     plugin.controllers.auth.pinSubmit = pinSubmitHandler;
+    plugin.controllers.auth.resetPinRequest = resetPinRequestHandler;
+    plugin.controllers.auth.resetPinSubmit = resetPinSubmitHandler;
 
     plugin.controllers.user.me = me;
     plugin.controllers.user.followFriend = followFriend;

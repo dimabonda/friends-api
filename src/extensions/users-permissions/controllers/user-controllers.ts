@@ -68,8 +68,12 @@ export const getUserProfile = async (ctx: Context) => {
             return ctx.badRequest("User account is blocked.");
         }
 
+        const friendIdsArray = await strapi.plugin("users-permissions").service("user-service").getUserFriendsIds(currentUser.id);
+
+        const isFriend = friendIdsArray.includes(user.id);
+
         ctx.send({
-            user: userDataPublic(user),
+            user: {...userDataPublic(user), isFriend},
         }, 200)
 
     } catch (error) {

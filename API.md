@@ -1,7 +1,4 @@
-после логина не видно друзей 
-когда добавляешь через пост 
-
-# Auth
+ # Auth
 
 ## Registration     
 
@@ -9,11 +6,11 @@ url: `api/auth/local/register`
 method: `POST`  
 headers: `Content-Type: application/json`   
 body (form-data): 
-```
+```json
 {
     "firstName": "Dima",
     "lastName": "Bondarenko",
-    "email": "dimabondarenko2404@gmail.com",
+    "email": "dimabondarenko@gmail.com",
     "password": "111111",
     "location": "Kharkiv",
     "occupation": "Developer",
@@ -25,10 +22,10 @@ response body (Example):
 {
     "user": {
         "id": 35,
-        "username": "dimabondarenko2404+1@gmail.com",
+        "username": "dimabondarenko+1@gmail.com",
         "firstName": "Dima",
         "lastName": "Bondarenko",
-        "email": "dimabondarenko2404+1@gmail.com",
+        "email": "dimabondarenko+1@gmail.com",
         "location": "Kharkiv",
         "occupation": "Developer",
         "confirmed": false,
@@ -74,10 +71,10 @@ response body (Example): if (confirmed === true) jwt
     "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDIsImlhdCI6MTc0NjkwODIyNCwiZXhwIjoxNzQ5NTAwMjI0fQ.6_xIhjSQgHJf4rwYxrCkfmtHV15ugdX2T_gyeiAbzKc",
     "user": {
         "id": 41,
-        "username": "dimabondarenko2404@gmail.com",
+        "username": "dimabondarenko@gmail.com",
         "firstName": "Dima",
         "lastName": "Bondarenko",
-        "email": "dimabondarenko2404@gmail.com",
+        "email": "dimabondarenko@gmail.com",
         "location": "Kharkiv",
         "occupation": "Developer",
         "confirmed": false,
@@ -92,7 +89,8 @@ response body (Example): if (confirmed === true) jwt
         },
         "photo": {
             "url": "/uploads/man1_77838d1bc1.webp"
-        }
+        },
+        "friendsCount": 10
     },
 }
 ```
@@ -163,7 +161,11 @@ response body (Example):
             "type": "user",
             "createdAt": "2024-10-07T19:23:28.946Z",
             "updatedAt": "2025-05-10T17:29:36.403Z"
-        }
+        },
+        "photo": {
+            "url": "/uploads/licensed_image_0659c262bd.jpeg"
+        },
+        "friendsCount": 0
     }
 }
 ```
@@ -175,6 +177,64 @@ Statuses:
 400 - Pin must be a 6-digit number
 404 - User not found
 ___
+
+## Sent reset password pin to email:
+
+url: `api/auth/reset-pin-request`
+method: `POST`  
+headers: `Content-Type: application/json`   
+body (JSON, inviteCode is optional): 
+```json
+{
+    "email": "user@gmail.com"
+}
+```
+response body (Example):
+```json
+{
+    "message": "Reset pin code sent"
+}
+```
+Statuses:   
+200 - Reset pin code sent        
+400 - Email is required
+400 - Email is not valid
+403 - User is blocked
+404 - User not found
+
+___
+
+
+## Check reset password pin:
+
+url: `api/auth/reset-pin-submit`
+method: `POST`  
+headers: `Content-Type: application/json`   
+body (JSON, inviteCode is optional): 
+```json
+{
+    "email": "dimabondarenko@gmail.com",
+    "pin": "216758"
+}
+```
+response body (Example):
+```json
+{
+    "message": "PIN verified successfully"
+}
+```
+Statuses:   
+200 - Reset pin code sent        
+400 - Email is required
+400 - Email is not valid
+400 - Invalid pin
+403 - User is blocked
+404 - User not found
+___
+
+
+
+
 
 
 # User
@@ -192,10 +252,10 @@ response body (Example):
     "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDEsImlhdCI6MTczOTQ3ODE0NywiZXhwIjoxNzQyMDcwMTQ3fQ.Lmyn_j6J4myIjSoJLjI-vLUsZ7B0jcKqZRaTrg_pwlc",
     "user": {
         "id": 41,
-        "username": "dimabondarenko2404@gmail.com",
+        "username": "dimabondarenko@gmail.com",
         "firstName": "Dima",
         "lastName": "Bondarenko",
-        "email": "dimabondarenko2404@gmail.com",
+        "email": "dimabondarenko@gmail.com",
         "location": "Kharkiv",
         "occupation": "Developer",
         "confirmed": true,
@@ -235,10 +295,10 @@ response body (Example):
 {
     "user": {
         "id": 42,
-        "username": "dimabondarenko2404+1@gmail.com",
+        "username": "dimabondarenko+1@gmail.com",
         "firstName": "test",
         "lastName": "test",
-        "email": "dimabondarenko2404+1@gmail.com",
+        "email": "dimabondarenko+1@gmail.com",
         "location": "Kharkiv",
         "occupation": "Develop",
         "confirmed": true,
@@ -255,7 +315,8 @@ response body (Example):
             "id": 21,
             "url": "/uploads/link12_02dfa00bbe.png"
         },
-        "friendsCount": 1
+        "friendsCount": 1,
+        "isFriend": true,
     }
 }
 
@@ -348,6 +409,54 @@ Statuses:
 400 - User not confirmed! / User account is blocked'
 404 - User not found
 ___
+
+## Get users
+
+lastCursor = userId
+url: `api/user/search/all-users?pageSize=5&lastCursor=70&query=test`
+method: `GET`  
+
+Authorization: Bearer [YOUR_TOKEN]
+
+response body (Example):
+```json
+
+{
+    "hasMore": true,
+    "friends": [
+        {
+            "id": 68,
+            "firstName": "ftest",
+            "lastName": "ftest",
+            "location": "Kharkiv",
+            "photo": {
+                "id": 62,
+                "url": "/uploads/image_1_eb097d824e.png"
+            },
+            "isFriend": true
+        },
+        {
+            "id": 69,
+            "firstName": "vtest",
+            "lastName": "vtest",
+            "location": "Kharkiv",
+            "photo": {
+                "id": 63,
+                "url": "/uploads/image_59bf390b7d.png"
+            },
+            "isFriend": false
+        }
+    ],
+    "totalCount": 2
+}
+
+```
+Statuses:   
+200 - OK
+400 - User not confirmed! / User account is blocked'
+404 - User not found
+___
+
 
 # Post
 

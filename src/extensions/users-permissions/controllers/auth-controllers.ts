@@ -37,7 +37,7 @@ function pinGenerator() {
     const min = 0;
     const max = 999999;
     const randomCode = Math.floor(Math.random() * (max - min + 1)) + min;
-    return randomCode.toString().padStart(4, '0');
+    return randomCode.toString().padStart(6, '0');
 }
 
 
@@ -322,12 +322,29 @@ export const pinSubmitHandler = async (ctx: Context) => {
             role: userRole
         });
 
-        const jwt = strapi.plugin('users-permissions').service('jwt').issue({id: updatedUser.id});
+
+        const userData = await strapi.query("plugin::users-permissions.user").findOne({
+            where: { id: updatedUser.id },
+            populate: {
+                role: true,
+                photo: {
+                    select: ['url'] 
+                },
+            },
+        })
+
+          const friendsCount = await strapi.db.query('api::friend-link.friend-link').count({
+			where: {
+				user: userData.id,
+			}
+		});
+
+        const jwt = strapi.plugin('users-permissions').service('jwt').issue({id: userData.id});
 
         ctx.send({
             jwt,
             message: "User confirmed",
-            user: userDataPublic(updatedUser),  
+            user: userDataPublic({...userData, friendsCount}),
         });
     } catch (error) {
         // console.error("Error", error.message);
@@ -358,3 +375,117 @@ export const pinSubmitHandler = async (ctx: Context) => {
     }
 }
 
+export const resetPinRequestHandler = async (ctx: Context) => {
+    try {
+        const emailSchema = yup.string().email("Email is not valid").required("Email is required");
+        const { email } = ctx.request.body as PinRequestBody;
+        
+        try {
+            await emailSchema.validate(email);
+        } catch (error) {
+            return ctx.badRequest(error.errors[0]);
+        }
+
+        const user = await strapi.query("plugin::users-permissions.user").findOne({
+            where: {
+                email
+            }
+        })
+
+        if(!user) {
+            return ctx.notFound("User not found")
+        }
+
+        if(user.blocked){
+            return ctx.forbidden("User is blocked")
+        }
+
+        const emailTemplatePath = path.join(__dirname, '..', '..', '..', '..', '..', 'config', 'email-templates', 'reset-password-pin.html');
+        const template = await fs.promises.readFile(emailTemplatePath, 'utf8');
+        const compiled = _.template(template);
+
+        
+        const code = pinGenerator();
+        await strapi.plugin("users-permissions").service("user").edit(user.id, { resetPasswordPin: code });
+
+         // put code to template
+        const html = compiled({ code });
+        const text = `Your PIN code is: ${code}`;
+ 
+        await sendEmail({
+            to: email.toLowerCase(),
+            subject: 'Reset your password with this PIN',
+            html,
+            text,
+        });
+     
+        ctx.send({
+            message: "Reset pin code sent",
+        });
+    } catch (error) {
+        console.error("Error", error.message);
+        ctx.internalServerError("An unexpected error occurred" )
+    }
+}
+
+export const resetPinSubmitHandler = async (ctx: Context) => {
+    try {
+        const body = ctx.request.body as PinSubmitBody;
+        const schema = yup.object({
+            email: yup.string().email("Email is not valid").required("Email is required"),
+            pin: yup.string().matches(/^\d{6}$/, "Pin must be a 6-digit number").required("Pin is required"),
+        });
+
+        const { email, pin } = await schema.validate(body, { abortEarly: false });
+
+        const user = await strapi.query("plugin::users-permissions.user").findOne({
+            where: {
+                email
+            }
+        })
+
+        if (!user) {
+            return ctx.notFound("User not found")
+        }
+
+        if (user.blocked){
+            return ctx.forbidden("User is blocked")
+        }
+
+         // Check if the pin matches the saved pin
+        if (pin !== user.resetPasswordPin) {
+            return ctx.badRequest("Invalid pin")
+        }
+    
+        const updatedUser = await strapi.plugin("users-permissions").service("user").edit(user.id, { 
+            resetPasswordPin: '',
+        });
+
+        ctx.send({
+            message: "PIN verified successfully",
+        });
+    } catch (error) {
+        if (error instanceof yup.ValidationError) {
+            const errorDetails = error.inner.reduce((acc: Record<string, string>, err) => {
+                if (err.path) {
+                    acc[err.path] = err.message;
+                }
+                return acc;
+            }, {});
+            ctx.response.status = 400;
+            ctx.response.body = {
+                data: null,
+                error: {
+                    status: 400,
+                    name: "BadRequestError",
+                    message: "Validation Error",
+                    details: errorDetails
+                }
+            };
+
+        } else {
+            ctx.internalServerError("An unexpected error occurred");
+        }
+
+    }
+}
